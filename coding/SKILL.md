@@ -1,33 +1,54 @@
 ---
 name: coding
-description: Diagnose and solve codebase problems, including bugs, design issues, and performance problems. Map affected code and causes, define tests, compare solutions, implement the best-ranked option, and verify it.
+description: Diagnose, plan, implement, review, and verify codebase changes for bugs, design issues, and performance problems. Use a coordinated multi-agent workflow with independent design-focused reviewers and a clear implementation handoff.
 ---
 
 # Coding
 
-Use this workflow for codebase problems. Keep conclusions tied to evidence from the repository and the user's requirements.
+Use this workflow for codebase problems. Keep conclusions tied to repository evidence and the user's requirements. The lead agent owns the plan, integration, review loop, verification, and final explanation.
 
-## Diagnose the problem
+## Diagnose and plan
 
-- Read applicable `AGENTS.md` instructions, inspect the working tree, and trace the relevant implementation, callers, data flow, and existing tests before editing. Preserve unrelated user changes.
-- State the problem in observable terms: expected behavior, actual behavior, and a minimal reproduction or example when possible.
-- Identify the affected files, modules, interfaces, and downstream behavior. Separate confirmed causes from plausible hypotheses; gather evidence before treating a hypothesis as the root cause.
-- Define how the fix will be tested before choosing a solution. Include reproduction steps, expected results, relevant existing tests or commands, and important edge cases. If details needed to make this plan meaningful are unavailable, state assumptions or ask the user.
+- Read applicable `AGENTS.md` instructions, inspect the working tree, and trace the relevant implementation, callers, data flow, and existing checks before editing. Preserve unrelated user changes.
+- State the problem in observable terms: expected behavior, actual behavior, and a minimal reproduction or example when possible. Separate confirmed causes from hypotheses.
+- Identify affected files, modules, interfaces, downstream behavior, and dependencies between work items.
+- Before making changes, write a concrete plan. Include the proposed approach, ordered work items, files or boundaries each item owns, agent assignments, integration points, and how the result will be verified. Update the plan if investigation changes the scope.
+- Split implementation work across multiple agents when the work can be divided into independent, safely integrable pieces. Give each agent a bounded assignment and avoid concurrent edits to the same files. If the change is too small or coupled to split safely, assign one implementation owner and use another agent for focused investigation or integration support; state why the code work stayed with one owner.
+- Define the verification plan before implementation, including expected outcomes and important edge cases. Follow user and repository instructions about which checks may be run. If important details are missing, state reasonable assumptions or ask the user when they materially affect the approach.
 
 ## Compare solutions
 
-- List the distinct, viable solutions and their tradeoffs. Do not pad the list with speculative variants.
-- Build an evaluation grid whose criteria and weights fit this task. Include the user's stated preferences and requirements, expected correctness, fit with the test plan, and other relevant factors such as performance, maintainability, implementation effort, compatibility, or regression risk.
-- Treat mandatory requirements as gates. For the remaining criteria, assign clear weights and scores (for example, 1–5), cite concrete evidence for each score, and calculate a weighted total. State when a score or weight is an estimate. If priorities are unclear and would change the winner, ask the user before selecting.
-- Treat test results as evidence only after running the tests; before implementation, describe expected test fit without claiming a solution passes. Explain the selected top-ranked solution and briefly document why the alternatives scored lower.
+- For nontrivial changes with multiple viable approaches, list the real options and their tradeoffs. Do not pad the list with speculative variants.
+- Evaluate options against task-specific criteria, including mandatory requirements, correctness, fit with the verification plan, maintainability, compatibility, implementation effort, and regression risk as relevant. Treat mandatory requirements as gates; use clear weights and evidence for scored criteria. Mark estimates as estimates.
+- Choose the strongest viable approach and explain why the alternatives rank lower. For a straightforward change with only one sensible approach, say so briefly instead of manufacturing a scoring exercise.
 
-## Implement, review, and verify
+## Implement and integrate
 
-- Implement the top-ranked solution only. Keep the change cohesive, follow local conventions, and avoid unrelated cleanup, dependencies, or abstractions without a concrete need.
-- After implementation, ask two independent critic agents to review the change against the problem statement, requirements, root-cause analysis, evaluation criteria, test plan, and likely regressions. Ask for specific findings and evidence, not general approval.
-- Correct review findings and have both agents review the revised implementation again. Continue until both explicitly approve and report no remaining findings. If they disagree, investigate the evidence and resolve the disagreement before considering review complete. Never claim two-agent review if two independent agents were unavailable; report that limitation.
-- Run the defined test plan, including relevant focused checks and regression cases. If a check fails, investigate and fix the cause, rerun affected checks, and repeat the critic review for any material code change. Report commands and outcomes accurately; distinguish unavailable checks from passing checks.
+- Implement the selected approach in the planned work areas. Keep changes cohesive, follow local conventions, and avoid unrelated cleanup, dependencies, or abstractions without a concrete need.
+- Coordinate delegated work through clear ownership and integration boundaries. Review each contribution in the full repository context, resolve conflicts, and ensure the integrated result still matches the plan.
+- If findings or implementation evidence change the design, update the plan and explain the decision before proceeding.
+
+## Independent design review and fix loop
+
+- After implementation, have two independent verifier agents review the current changes. Both must use `$software-design-philosophy` and assess the affected design and code against the problem, requirements, confirmed cause, architecture, plan, and likely regressions.
+- Ask each verifier for specific, evidence-backed findings and concrete suggestions. Each review must state the current score against the skill's eight Quick Diagnostic rows, identify failed rows, and name the changes that would raise the affected design toward 10/10. Distinguish issues introduced by this change from pre-existing or out-of-scope observations.
+- Keep the verifiers independent: neither should rely on the other's conclusions. Do not let implementation agents approve their own fixes.
+- Route actionable findings to implementation agent(s), or fix them in the lead agent's owned work. After fixes, have the same two verifiers independently review the updated change again. Repeat this review → fix → re-review cycle until both verifiers explicitly confirm there are no remaining in-scope findings or actionable suggestions and approve the result.
+- Re-review after every material code change. Resolve reviewer disagreements with repository evidence and another focused review; do not treat disagreement as approval.
+- If a verifier is unavailable, delegation is unavailable, or a finding cannot be resolved within scope, do not claim the two-verifier gate passed. Explain the limitation or blocker and the remaining work. Do not silently replace an unavailable verifier with the implementer.
+
+## Verify
+
+- Run the agreed, in-scope checks after implementation and after any material fix, following the user's instructions and repository constraints. Investigate failures, fix causes, and rerun affected checks. Report exact commands and outcomes; distinguish passed, failed, and unavailable checks.
+- A clean design review does not substitute for functional verification, and passing checks do not substitute for design review.
 
 ## Handoff
 
-Summarize the problem, confirmed cause, affected code, test plan and results, solution alternatives, evaluation grid and weights, selected solution, implementation, and the two critics' final status. Call out unresolved uncertainty or unavailable validation directly.
+Explain the decisions and outcome clearly. Include:
+
+- The problem and confirmed cause, with remaining uncertainty separated from facts.
+- The selected approach, alternatives considered when relevant, and why the decision was made.
+- The resulting architecture: affected modules, their responsibilities, interfaces, and important data or control flow.
+- The code changes and which work areas or agents handled them.
+- Verification commands and outcomes, plus the final status and findings of both verifiers.
+- Potential blockers, unresolved risks, deferred suggestions, or unavailable validation. If none remain, say so.
