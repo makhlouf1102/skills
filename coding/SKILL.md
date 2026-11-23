@@ -7,6 +7,18 @@ description: Diagnose, plan, implement, review, and verify codebase changes for 
 
 Use this workflow for codebase problems. Keep conclusions tied to repository evidence and the user's requirements. The lead agent owns the plan, integration, review loop, verification, and final explanation.
 
+## Required companion skill
+
+This workflow uses `$software-design-philosophy` for design reviews. Before starting a review, confirm that the skill is installed for the current user. If it is missing, install it globally with:
+
+```sh
+npx skills add wondelai/skills/software-design-philosophy --global
+```
+
+## Model selection
+
+At the start of each coding task, before planning or launching agents, ask the user which model should run the orchestrator and which model or models to use for implementation and verifier subagents. Offer only models available in the current environment, and wait for the user's choice before proceeding. If the user delegates the choice, select supported defaults and state them. If the requested orchestrator model cannot be applied to the current thread, explain the limitation and ask whether to continue with the current model or restart under the requested one.
+
 ## Diagnose and plan
 
 - Read applicable `AGENTS.md` instructions, inspect the working tree, and trace the relevant implementation, callers, data flow, and existing checks before editing. Preserve unrelated user changes.
